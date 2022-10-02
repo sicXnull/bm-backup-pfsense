@@ -20,10 +20,13 @@ PFSENSE_PASS=VotreMdp
 # where to store backups
 BACKUP_DIR="${RUNDIR}/conf_backup"
 
+# Limit the number of backups stored.
+limit=5
+
 ######## END VARIABLES ########
 ##############################
 
-######################################### NE RIEN TOUCHER SOUS CETTE LIGNE #########################################
+##################################################################################
 
 echo
 echo "*** pfMotion-backup script by @xhark (v${VERSION}) ***"
@@ -88,6 +91,17 @@ mv $CONFIG_TMP "$BACKUP_DIR/$backup_file" && echo "Backup OK : $BACKUP_DIR/$back
 
 # cleaning tmp and cookie files
 rm -f "$COOKIE_FILE" "$CSRF1_TOKEN" "$CSRF2_TOKEN"
+
+
+number_of_files=$(ls $BACKUP_DIR | wc -l)
+
+if [ $number_of_files -gt $limit ]
+then
+    # There are more files than the limit
+    # So we need to remove the older ones.
+    cd $BACKUP_DIR
+    ls -t | tail --lines=+$(expr $limit + 1) | xargs -d '\n' rm
+fi
 
 echo
 exit 0
